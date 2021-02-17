@@ -1,12 +1,13 @@
 (defpackage tailrec
   (:use #:cl)
-  (:export tailrec))
+  (:import-from #:trivial-with-current-source-form
+                with-current-source-form)
+  (:export tailrec nlet))
 (in-package #:tailrec)
 
 (defvar *at-tail* t)
 (defvar *first-form* t)
 (defvar *last-form*)
-(defvar *non-tail-warning*)
 (defvar *optimized*)
 
 (defun conditionalp (symbol)
@@ -30,9 +31,9 @@ ARGS is the symbol storing the arguments before a jump."
            `(progn
             (setq ,args (list ,@(rest form)))
             (go ,start)))
-         (progn
+         (with-current-source-form (form)
            (setq *at-tail* nil)
-           (setq *non-tail-warning* t)
+           (warn "~a is not a tail recursive" name)
            form)))
     (:else
      (let* ((*first-form* (first form))
@@ -52,7 +53,6 @@ ARGS is the symbol storing the arguments before a jump."
     (let* ((start (gensym))
            (result (gensym))
            (args (gensym))
-           (*non-tail-warning* nil)
            (*optimized* nil)
            (optimized
              (optimize-tails name start args body))
@@ -67,8 +67,6 @@ ARGS is the symbol storing the arguments before a jump."
                                          ,@optimized)
                                        (progn ,@optimized))))
                           ,result))))
-      (when *non-tail-warning*
-        (warn "~a is not a tail recursive" name))
       (cond
         ((not *optimized*) defunition)
         (def (cons def fun))
@@ -90,4 +88,3 @@ ARGS is the symbol storing the arguments before a jump."
                      (when (consp binding)
                        (second binding)))
                    bindings))))
-
