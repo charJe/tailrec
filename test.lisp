@@ -1,3 +1,10 @@
+(defun fib-reg (n)
+  "Return the Nth Fibonnaci number."
+  (if (< n 2)
+      n
+      (+ (fib-reg (- n 1))
+         (fib-reg (- n 2)))))
+
 (tailrec
  (defun fib (n &optional (a 0) (b 1))
    "Return the Nth Fibonnaci number."
@@ -16,4 +23,5 @@
           (fib-bad (- n 2))))))
 
 (assert (= (fib 10)
-           (fib-bad 10)))
+           (fib-bad 10)
+           (fib-reg 10)))
