@@ -14,36 +14,43 @@
   (and (symbolp symbol)
        (member symbol '(if))))
 
+(defun non-expandable-p (form)
+  (and (consp form)
+       (symbolp (first form))
+       (member (first form)
+          '(declare declaim function lambda))))
+
 (defun optimize-tails (name start args form
-                       &aux (form (macroexpand form)))
+                       &aux (eform (macroexpand form)))
   "Return FORM optimize to tail call NAME.
 START is the symbol at the begininng of NAME.
 ARGS is the symbol storing the arguments before a jump."
   (cond
-    ((atom form) form)
-    ((and (symbolp (first form))
-          (eql name (first form)))
+    ((non-expandable-p form) form)
+    ((atom eform) eform)
+    ((and (symbolp (first eform))
+          (eql name (first eform)))
      (if (and *at-tail*
               (or (conditionalp *first-form*)
-                  (eql form *last-form*)))
+                  (eql eform *last-form*)))
          (progn
            (setq *optimized* t)
            `(progn
-            (setq ,args (list ,@(rest form)))
+            (setq ,args (list ,@(rest eform)))
             (go ,start)))
-         (with-current-source-form (form)
+         (with-current-source-form (eform)
            (setq *at-tail* nil)
            (warn "~a is not a tail recursive" name)
-           form)))
+           eform)))
     (:else
-     (let* ((*first-form* (first form))
-            (*last-form* (first (last form)))
+     (let* ((*first-form* (first eform))
+            (*last-form* (first (last eform)))
             (*at-tail* (and (symbolp *first-form*)
                             (special-operator-p *first-form*))))
        (map 'list
-            (lambda (form)
-              (optimize-tails name start args form))
-            form)))))
+            (lambda (eform)
+              (optimize-tails name start args eform))
+            eform)))))
 
 (defmacro tailrec (defunition)
   "Ensure that BODY is tail call optimized when calling def"
