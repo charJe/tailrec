@@ -1,0 +1,41 @@
+#+title: Tailrec
+A simple macro to optimize a function for tail recursion.
+
+* Install
+Use quicklisp.
+#+BEGIN_SRC lisp
+  (ql:quickload 'tailrec)
+#+END_SRC
+
+* Use
+Just wrap your function definition with ~(tailrec )~:
+#+BEGIN_SRC lisp
+  (tailrec
+   (defun fib (n &optional (a 0) (b 1))
+     "Return the Nth Fibonnaci number."
+     (cond
+       ((= 0 n) a)
+       ((= 1 n) b)
+       (:else (fib (- n 1) b (+ a b))))))
+#+END_SRC
+
+If your function is not tail recursive, ~tailrec~ will give warnings and not optimize.
+
+Also provided is the ~nlet~ macro which is similar to Clojure's ~loop~. It automatically uses ~tailrec~.
+
+#+BEGIN_SRC lisp
+  (nlet fib ((n 10)
+             (a 0)
+             (b 1))
+    (cond
+      ((= 0 n) a)
+      ((= 1 n) b)
+      (:else (fib (- n 1) b (+ a b)))))
+  ;=> 55
+#+END_SRC
+
+* Issues
+Common Lisp is a very complex beast, so I probably am missing something here. It will work for some things, but might not work for others. If you have any issues use the Github issue tracker.
+
+* Contact
+If you are not having issues, but still want to contact me for collaboration, licensing, or something else, you can use the email in =tailrec.asd=.
