@@ -18,7 +18,7 @@
   (and (consp form)
        (symbolp (first form))
        (member (first form)
-          '(declare declaim function lambda))))
+          '(declare declaim function lambda quote))))
 
 (defun optimize-tails (name start args form
                        &aux (eform (macroexpand form)))
