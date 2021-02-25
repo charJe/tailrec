@@ -1,7 +1,7 @@
-(defpackage tailrec
+(defpackage tailrec-llgpl
   (:use #:cl)
   (:export tailrec nlet))
-(in-package #:tailrec)
+(in-package #:tailrec-llgpl)
 
 (defvar *at-tail* t)
 (defvar *first-form* t)
