@@ -1,7 +1,5 @@
 (defpackage tailrec
   (:use #:cl)
-  (:import-from #:trivial-with-current-source-form
-                with-current-source-form)
   (:export tailrec nlet))
 (in-package #:tailrec)
 
@@ -38,7 +36,7 @@ ARGS is the symbol storing the arguments before a jump."
            `(progn
             (setq ,args (list ,@(rest eform)))
             (go ,start)))
-         (with-current-source-form (eform)
+         (progn
            (setq *at-tail* nil)
            (warn "~a is not a tail recursive" name)
            eform)))
