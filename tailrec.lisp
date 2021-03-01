@@ -43,7 +43,8 @@ ARGS is the symbol storing the arguments before a jump."
     (:else
      (let* ((*first-form* (first eform))
             (*last-form* (first (last eform)))
-            (*at-tail* (and (symbolp *first-form*)
+            (*at-tail* (and *at-tail*
+                            (symbolp *first-form*)
                             (special-operator-p *first-form*))))
        (map 'list
             (lambda (eform)

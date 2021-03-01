@@ -1,3 +1,5 @@
+(import 'tailrec:tailrec)
+
 (defun fib-reg (n)
   "Return the Nth Fibonnaci number."
   (if (< n 2)
@@ -25,3 +27,22 @@
 (assert (= (fib 10)
            (fib-bad 10)
            (fib-reg 10)))
+
+(defun foo (n)
+  (prqint n)
+  (when (plusp n)
+    (foo (1- n)))
+  (print 'end))
+
+(tailrec
+ (defun foo-op (n)
+   (print n)
+   (when (plusp n)
+     (foo-op (1- n)))
+   (print 'end)))
+
+(assert (string=
+         (with-output-to-string (*standard-output*)
+           (foo 4))
+         (with-output-to-string (*standard-output*)
+           (foo-op 4))))
