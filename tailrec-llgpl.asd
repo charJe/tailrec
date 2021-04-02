@@ -1,6 +1,6 @@
-(defpackage tailrec-asd
+(defpackage tailrec-llgpl-asd
   (:use #:cl #:asdf))
-(in-package #:tailrec-asd)
+(in-package #:tailrec-llgpl-asd)
 
 (defsystem #:tailrec-llgpl
   :description "Guaranteed tail call optimization."
