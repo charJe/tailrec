@@ -1,4 +1,4 @@
-(import 'tailrec:tailrec)
+(import 'tailrec-llgpl:tailrec)
 
 (defun fib-reg (n)
   "Return the Nth Fibonnaci number."
