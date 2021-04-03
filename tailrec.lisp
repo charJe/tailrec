@@ -37,11 +37,13 @@ ARGS is the symbol storing the arguments before a jump."
            (warn "~a is not a tail recursive" name)
            form)))
     (:else
-     (let* ((*first-form* (first form))
+     (let* ((first-form (first form))
             (*at-tail* (and *at-tail*
-                            (symbolp *first-form*)
-                            (special-operator-p *first-form*)
-                            (equal form *last-form*)))
+                            (symbolp first-form)
+                            (special-operator-p first-form)
+                            (or (equal form *last-form*)
+                                (conditionalp *first-form*))))
+            (*first-form* first-form)
             (*last-form* (first (last form))))
        (map 'list
             (lambda (form)
