@@ -8,4 +8,5 @@
   :license "LLGPL"
   :version "0"
   :serial t
+  :depends-on (#:trivial-macroexpand-all)
   :components ((:file "tailrec")))
