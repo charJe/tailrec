@@ -49,3 +49,26 @@
            (foo 4))
          (with-output-to-string (*standard-output*)
            (foo-op 4))))
+
+;; 0 warnings
+(tailrec
+ (defun stupid-filter (list
+                       &optional acc)
+   (let ((item (first list)))
+     (cond
+       ((null list) (reverse acc))
+       ((evenp item)
+        (stupid-filter (rest list)
+                       (cons item acc)))
+       (:else
+        (let ((moder (mod item 3)))
+          (cond
+            ((= 0 moder)
+             (stupid-filter (rest list)
+                            (cons item acc)))
+            ((= 1 moder)
+             (stupid-filter (rest list)
+                            (cons (+ item 1) acc)))
+            (:else
+             (stupid-filter (rest list)
+                            acc)))))))))
