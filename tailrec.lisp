@@ -2,6 +2,8 @@
   (:use #:cl)
   (:import-from #:trivial-with-current-source-form
                 with-current-source-form)
+  (:import-from #:trivial-macroexpand-all
+                macroexpand-all)
   (:export tailrec nlet))
 (in-package #:tailrec)
 
@@ -14,44 +16,37 @@
   (and (symbolp symbol)
        (member symbol '(if))))
 
-(defun non-expandable-p (form)
-  (and (consp form)
-       (symbolp (first form))
-       (member (first form)
-          '(declare declaim function lambda quote))))
-
-(defun optimize-tails (name start args form
-                       &aux (eform (macroexpand form)))
+(defun optimize-tails (name start args form)
   "Return FORM optimize to tail call NAME.
 START is the symbol at the begininng of NAME.
 ARGS is the symbol storing the arguments before a jump."
   (cond
-    ((non-expandable-p form) form)
-    ((atom eform) eform)
-    ((and (symbolp (first eform))
-          (eql name (first eform)))
+    ((atom form) form)
+    ((and (symbolp (first form))
+          (eql name (first form)))
      (if (and *at-tail*
               (or (conditionalp *first-form*)
-                  (eql eform *last-form*)))
+                  (equal form *last-form*)))
          (progn
            (setq *optimized* t)
            `(progn
-            (setq ,args (list ,@(rest eform)))
+            (setq ,args (list ,@(rest form)))
             (go ,start)))
-         (with-current-source-form (eform)
+         (with-current-source-form (form)
            (setq *at-tail* nil)
            (warn "~a is not a tail recursive" name)
-           eform)))
+           form)))
     (:else
-     (let* ((*first-form* (first eform))
-            (*last-form* (first (last eform)))
+     (let* ((*first-form* (first form))
             (*at-tail* (and *at-tail*
                             (symbolp *first-form*)
-                            (special-operator-p *first-form*))))
+                            (special-operator-p *first-form*)
+                            (equal form *last-form*)))
+            (*last-form* (first (last form))))
        (map 'list
-            (lambda (eform)
-              (optimize-tails name start args eform))
-            eform)))))
+            (lambda (form)
+              (optimize-tails name start args form))
+            form)))))
 
 (defmacro tailrec (defunition)
   "Ensure that BODY is tail call optimized when calling def"
@@ -62,8 +57,13 @@ ARGS is the symbol storing the arguments before a jump."
            (result (gensym))
            (args (gensym))
            (*optimized* nil)
+           (body (map 'list 'macroexpand-all body))
+           (*last-form* (first (last body)))
            (optimized
-             (optimize-tails name start args body))
+             (map 'list
+                  (lambda (form)
+                    (optimize-tails name start args form))
+                  body))
            (fun `(,name ,lambda-list
                         (let ((,result nil)
                               (,args nil))

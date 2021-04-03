@@ -8,5 +8,6 @@
   :license "GPL"
   :version "0"
   :serial t
-  :depends-on (#:trivial-with-current-source-form)
+  :depends-on (#:trivial-macroexpand-all
+               #:trivial-with-current-source-form)
   :components ((:file "tailrec")))
