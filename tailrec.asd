@@ -9,5 +9,6 @@
   :version "0"
   :serial t
   :depends-on (#:trivial-macroexpand-all
+               #:alexandria
                #:trivial-with-current-source-form)
   :components ((:file "tailrec")))

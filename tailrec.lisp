@@ -4,6 +4,8 @@
                 with-current-source-form)
   (:import-from #:trivial-macroexpand-all
                 macroexpand-all)
+  (:import-from #:alexandria
+                parse-body)
   (:export tailrec nlet))
 (in-package #:tailrec)
 
@@ -53,34 +55,36 @@ ARGS is the symbol storing the arguments before a jump."
 (defmacro tailrec (defunition)
   "Ensure that BODY is tail call optimized when calling def"
   (destructuring-bind
-      (def name lambda-list &body body)
-      defunition
-    (let* ((start (gensym))
-           (result (gensym))
-           (args (gensym))
-           (*optimized* nil)
-           (body (map 'list 'macroexpand-all body))
-           (*last-form* (first (last body)))
-           (optimized
-             (map 'list
-                  (lambda (form)
-                    (optimize-tails name start args form))
-                  body))
-           (fun `(,name ,lambda-list
-                        (let ((,result nil)
-                              (,args nil))
-                          (tagbody
-                             ,start
-                             (setq ,result
-                                   (if ,args
-                                       (destructuring-bind ,lambda-list ,args
-                                         ,@optimized)
-                                       (progn ,@optimized))))
-                          ,result))))
-      (cond
-        ((not *optimized*) defunition)
-        (def (cons def fun))
-        (:else fun)))))
+      (def name lambda-list &body body) defunition
+    (multiple-value-bind
+          (body declarations documentation)
+        (parse-body body :documentation t)
+      (let* ((start (gensym))
+             (result (gensym))
+             (args (gensym))
+             (*optimized* nil)
+             (body (map 'list 'macroexpand-all body))
+             (*last-form* (first (last body)))
+             (optimized
+               (map 'list
+                    (lambda (form)
+                      (optimize-tails name start args form))
+                    body))
+             (fun `(,name ,lambda-list ,documentation ,declarations
+                          (let ((,result nil)
+                                (,args nil))
+                            (tagbody
+                               ,start
+                               (setq ,result
+                                     (if ,args
+                                         (destructuring-bind ,lambda-list ,args
+                                           ,@optimized)
+                                         (progn ,@optimized))))
+                            ,result))))
+        (cond
+          ((not *optimized*) defunition)
+          (def (cons def fun))
+          (:else fun))))))
 
 (defmacro nlet (name bindings &body body)
   `(labels (,(macroexpand
