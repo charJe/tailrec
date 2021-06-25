@@ -1,4 +1,5 @@
 (import 'tailrec:tailrec)
+(import 'tailrec:deftailrec)
 
 (defun fib-reg (n)
   "Return the Nth Fibonnaci number."
@@ -16,6 +17,20 @@
      ((= 1 n) b)
      (:else (fib (- n 1) b (+ a b))))))
 
+(deftailrec fib-key (n &key (a 0) (b 1))
+  (cond
+     ((= 0 n) a)
+     ((= 1 n) b)
+     (:else (fib (- n 1) b (+ a b)))))
+
+(deftailrec fib-rest (n &rest vars)
+  (let ((a (or (first vars) 0))
+        (b (or (second vars) 1)))
+    (cond
+     ((= 0 n) a)
+     ((= 1 n) b)
+     (:else (fib (- n 1) b (+ a b))))))
+
 ;; this would be better to memoize
 ;; 2 warnings
 (tailrec
@@ -28,7 +43,9 @@
 
 (assert (= (fib 10)
            (fib-bad 10)
-           (fib-reg 10)))
+           (fib-reg 10)
+           (fib-key 10)
+           (fib-rest 10)))
 
 (defun foo (n)
   (print n)
@@ -72,3 +89,13 @@
             (:else
              (stupid-filter (rest list)
                             acc)))))))))
+
+
+(deftailrec floor-to-zero (number divisor)
+  (if (= 0 divisor)
+      (values number divisor)
+      (multiple-value-call
+          'floor-to-zero
+        (floor number divisor))))
+
+(assert (= 2 (length (multiple-value-list (floor-with-extra-steps 5 2)))))
