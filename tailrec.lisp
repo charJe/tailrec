@@ -6,7 +6,7 @@
                 macroexpand-all)
   (:import-from #:alexandria
                 parse-body)
-  (:export tailrec nlet))
+  (:export deftailrec tailrec nlet))
 (in-package #:tailrec)
 
 (defvar *at-tail* t)
@@ -85,6 +85,10 @@ ARGS is the symbol storing the arguments before a jump."
           ((not *optimized*) defunition)
           (def (cons def fun))
           (:else fun))))))
+
+(defmacro deftailrec (name lambda-list &body body)
+  "Wrapper for `tailrec' to reduce nesting by one layer."
+  `(tailrec (defun ,name ,lambda-list ,@body)))
 
 (defmacro nlet (name bindings &body body)
   `(labels (,(macroexpand
