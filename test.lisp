@@ -90,3 +90,12 @@
              (stupid-filter (rest list)
                             acc)))))))))
 
+
+(deftailrec floor-to-zero (number divisor)
+  (if (= 0 divisor)
+      (values number divisor)
+      (multiple-value-call
+          'floor-to-zero
+        (floor number divisor))))
+
+(assert (= 2 (length (multiple-value-list (floor-with-extra-steps 5 2)))))
