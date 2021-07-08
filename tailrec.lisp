@@ -125,7 +125,7 @@ ARGS is the symbol storing the arguments before a jump."
                                             ,mkeys
                                             ,mkey-keys
                                             ,mkey-values))))
-                              (multiple-values-list (progn ,@optimized)))))
+                              (multiple-value-list (progn ,@optimized)))))
                    (values-list ,result)))))
         (cond
           ((not *optimized*) defunition)
