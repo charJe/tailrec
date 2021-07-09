@@ -98,4 +98,4 @@
           'floor-to-zero
         (floor number divisor))))
 
-(assert (= 2 (length (multiple-value-list (floor-with-extra-steps 5 2)))))
+(assert (= 2 (length (multiple-value-list (floor-to-zero 5 2)))))
