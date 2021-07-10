@@ -63,19 +63,19 @@ ARGS is the symbol storing the arguments before a jump."
           (body declarations documentation)
         (parse-body body :documentation t)
       (multiple-value-bind
-            (params optional rest keys allow-other-keys-p aux keyp)
+            (params optional-params rest-param key-params allow-other-keys-p aux keyp)
           (parse-ordinary-lambda-list lambda-list)
         (declare (ignore aux allow-other-keys-p))
       (let* ((start (gensym))
              (result (gensym))
              (args (gensym))
-             (moptional (gensym))
-             (moptional-values (gensym))
-             (mkeys (gensym))
-             (mkey-keys (gensym))
-             (mkey-values (gensym))
              (mkey-args (gensym))
              (*optimized* nil)
+             (optional (map 'list 'first optional-params))
+             (optional-values (map 'list 'second optional-params))
+             (keys (map 'list 'cadar key-params))
+             (key-keys (map 'list 'caar key-params))
+             (key-values (map 'list 'second key-params))
              (body (map 'list 'macroexpand-all body))
              (*last-form* (first (last body)))
              (optimized
@@ -89,42 +89,43 @@ ARGS is the symbol storing the arguments before a jump."
                  ,documentation
                  ,declarations
                  (let ((,result nil)
-                       (,args nil)
-                       (,moptional ',(map 'list 'first optional))
-                       (,moptional-values (list ,@(map 'list 'second optional)))
-                       (,mkeys ',(map 'list 'cadar keys))
-                       (,mkey-keys ,(map 'list 'caar keys))
-                       (,mkey-values (list ,@(map 'list 'second keys))))
-                   (declare (ignorable ,moptional ,moptional-values
-                                       ,mkeys ,mkey-keys ,mkey-values))
+                       (,args nil))
                    (tagbody ,start
                       (setq ,result
                             (progn
                               (when ,args
                                 ;; set required args
-                                (mapc 'set ',params ,args)
+                                ,@(loop for param in params
+                                        for i from 0 collect
+                                        `(setq ,param (elt ,args ,i)))
                                 ;; shift args
                                 (setq ,args (nthcdr ,(length params) ,args))
                                 ;; set optional parameters
-                                ,(when optional
+                                ,(when optional-params
                                    `(progn
                                       ;; they might not all be supplied
-                                      (mapc 'set ,moptional ,moptional-values)
-                                      (mapc 'set ,moptional ,args)
+                                      ;; so set default values
+                                      ,@(loop for opt in optional
+                                              for default in optional-values collect
+                                              `(setq ,opt ,default))
+                                      (let ((length (length ,args)))
+                                        ,@(loop for opt in optional
+                                                for i from 0 collect
+                                                `(when (< ,i length)
+                                                   (setq ,opt (elt ,args ,i)))))
                                       ;; shift args
                                       (setq ,args (nthcdr ,(length optional) ,args))))
                                 ;; set rest
-                                ,(when rest
-                                   `(setq ,rest ,args))
+                                ,(when rest-param
+                                   `(setq ,rest-param ,args))
                                 ;; set keys
                                 ,(when keyp
                                    `(let ((,mkey-args (plist-alist ,args)))
-                                      (mapc (lambda (param key init)
-                                              (set param (or (cdr (assoc key ,mkey-args))
-                                                             init)))
-                                            ,mkeys
-                                            ,mkey-keys
-                                            ,mkey-values))))
+                                      ,@(loop for param in keys
+                                              for key in key-keys
+                                              for init in key-values collect
+                                              `(setf ,param (or (cdr (assoc ,key ,mkey-args))
+                                                                ,init))))))
                               (multiple-value-list (progn ,@optimized)))))
                    (values-list ,result)))))
         (cond

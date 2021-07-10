@@ -19,9 +19,11 @@
 
 (deftailrec fib-key (n &key (a 0) (b 1))
   (cond
-     ((= 0 n) a)
-     ((= 1 n) b)
-     (:else (fib (- n 1) b (+ a b)))))
+    ((= 0 n) a)
+    ((= 1 n) b)
+    (:else (fib-key (- n 1)
+                    :a b
+                    :b (+ a b)))))
 
 (deftailrec fib-rest (n &rest vars)
   (let ((a (or (first vars) 0))
@@ -29,7 +31,7 @@
     (cond
      ((= 0 n) a)
      ((= 1 n) b)
-     (:else (fib (- n 1) b (+ a b))))))
+     (:else (fib-rest (- n 1) b (+ a b))))))
 
 ;; this would be better to memoize
 ;; 2 warnings
